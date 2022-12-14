@@ -3,9 +3,7 @@ const router = express.Router()
 const client = require('../databasepg')
 
 router.get('/', (req, res) => {
-    //res.send("Users List")
-    
-    client.query(`Select * from accounts`, (err, result) => {
+   client.query(`Select * from accounts`, (err, result) => {
         if(!err) {
             res.send(result.rows)
         }
