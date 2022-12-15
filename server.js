@@ -1,31 +1,53 @@
+if(process.env.NODE_ENV !== 'production') {
+    require('dotenv').config()
+}
+
 const express = require('express')
 const app = express()
 const PORT = 3000
 const bcrypt = require('bcrypt')
+const passport = require('passport')
+const flash = require('express-flash')
+const session = require('express-session')
 
+const initializePassport = require('./passport-config')
+initializePassport(
+    passport,
+    email => users.find(user => user.email === email),
+    id => users.find(user => user.id === id)
+    )
 
-app.get("/", (req, res) => {
-    res.send('HI')
-})
 
 const userRouter = require('./routes/users')
 app.use('/users', userRouter)
 
 
-//passport
 const users = []
 
 app.set('view-engine', 'ejs')
 app.use(express.urlencoded({ extended: false }))
+app.use(flash())
+app.use(session({
+    secret: process.env.SESSION_SECRET,
+    resave: false,
+    saveUninitialized: false
+}))
+app.use(passport.initialize())
+app.use(passport.session())
 
+app.get("/", (req, res) => {
+    res.render('index.ejs', { name:'Nick' })
+})
 
 app.get('/login', (req, res) => {
     res.render('login.ejs')
 })
 
-app.post('/login', (req, res) => {
-    
-})
+app.post('/login', passport.authenticate('local', {
+    successRedirect: '/',
+    failureRedirect: '/login',
+    failureFlash: true
+}))
 
 
 app.get('/register', (req, res) => {
@@ -47,6 +69,7 @@ app.post('/register', async (req, res) => {
     }
     console.log(users)
 })
+
 
 app.listen(PORT, () => {
     console.log(`Server listening on PORT ${PORT}`);
